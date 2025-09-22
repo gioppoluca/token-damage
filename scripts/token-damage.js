@@ -1,4 +1,4 @@
-// token-damage.js v1.1.0
+// token-damage.js
 // Foundry VTT V12/V13. Requires libWrapper. D&D5e system.
 // Shows damage near tokens with Bar 2 visibility and configurable offsets/font size.
 
@@ -63,7 +63,6 @@ Hooks.once("init", () => {
   // libWrapper wrappers
   if (globalThis.libWrapper) {
     tryWrap("Token.prototype.drawBars");
-//    tryWrap("Token.prototype._drawBar");
   } else {
     console.warn(`${MODULE_ID}: libWrapper not found. Falling back to Hooks only.`);
   }
