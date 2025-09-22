@@ -47,7 +47,9 @@
       }
     ]
   },
-  "url": "https://github.com/gioppoluca/token-damage",
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
   "readme": "README.md",
   "license": "LICENSE"
 }
