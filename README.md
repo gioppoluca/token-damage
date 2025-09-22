@@ -4,7 +4,8 @@
 - ![Total Download Count](https://img.shields.io/github/downloads/gioppoluca/token-damage/total?color=d1b124&label=Total%20Download)
 - ![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Ftoken-damage&colorB=4aa94a)
 
-Shows the **current damage** next to tokens.
+Recreate that whiteboad feeling in your favourite VTT!!!
+This module shows the **current damage** next to tokens, based on enabling settings.
 Compatible with Foundry **V12** and **V13**. System: **D&D5e**.
 
 
