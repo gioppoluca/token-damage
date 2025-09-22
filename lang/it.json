@@ -1,0 +1,15 @@
+{
+  "TOKEN_DAMAGE.settings.enableMode.name": "Modalità di attivazione",
+  "TOKEN_DAMAGE.settings.enableMode.hint": "Scegli per quali token mostrare l'indicatore di danno.",
+  "TOKEN_DAMAGE.settings.enableMode.choices.off": "Disattivato",
+  "TOKEN_DAMAGE.settings.enableMode.choices.hostile": "Solo Ostili",
+  "TOKEN_DAMAGE.settings.enableMode.choices.nonAllies": "Non-Alleati (Ostili + Neutrali)",
+  "TOKEN_DAMAGE.settings.enableMode.choices.all": "Tutti",
+  "TOKEN_DAMAGE.settings.offsetX.name": "Offset X (px)",
+  "TOKEN_DAMAGE.settings.offsetX.hint": "Offset orizzontale dall'angolo in alto a destra del token (positivo sposta verso sinistra).",
+  "TOKEN_DAMAGE.settings.offsetY.name": "Offset Y (px)",
+  "TOKEN_DAMAGE.settings.offsetY.hint": "Offset verticale sopra il token (positivo aumenta la distanza).",
+  "TOKEN_DAMAGE.settings.fontPct.name": "Dimensione font (%)",
+  "TOKEN_DAMAGE.settings.fontPct.hint": "Dimensione del font come percentuale del lato minore del token (consigliato 8–64).",
+  "TOKEN_DAMAGE.dmgLabel": "DANNO"
+}

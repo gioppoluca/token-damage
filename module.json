@@ -1,0 +1,53 @@
+{
+  "id": "token-damage",
+  "title": "Token Damage",
+  "description": "Shows current damage next to tokens. D&D5e. V12+V13.",
+  "version": "#{VERSION}#",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "Luca Gioppo",
+      "url": "https://github.com/gioppoluca/token-damage",
+      "discord": "gioppoluca",
+      "flags": {}
+    }
+  ],
+  "systems": [
+    "dnd5e"
+  ],
+  "esmodules": [
+    "scripts/token-damage.js"
+  ],
+  "styles": [
+    "styles/token-damage.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "it",
+      "name": "Italiano",
+      "path": "lang/it.json"
+    }
+  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "compatibility": {
+          "minimum": "1.13.0"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/gioppoluca/token-damage",
+  "readme": "README.md",
+  "license": "LICENSE"
+}
