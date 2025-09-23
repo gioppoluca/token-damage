@@ -164,7 +164,7 @@ jobs:
           method: "POST"
           headers: '{ "Content-Type": "application/json", "Authorization": "${{ secrets.FOUNDRY_API_TOKEN }}" }'
           accept: 200
-          body: '{"id": "${{ github.repository }}", "dry-run": false, "release": { "version": "${{ github.event.release.tag_name }}", "manifest": "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.json", "notes": "https://github.com/gioppoluca/${{ github.repository }}/blob/master/CHANGELOG.md", "compatibility": { "minimum": "12", "verified": "13", "maximum": "13" } } }'
+          body: '{"id": "token-damage", "dry-run": false, "release": { "version": "${{ github.event.release.tag_name }}", "manifest": "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.json", "notes": "https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md", "compatibility": { "minimum": "12", "verified": "13", "maximum": "13" } } }'
           log-response: true
           timeout: 10000
       - name: "Use response"
