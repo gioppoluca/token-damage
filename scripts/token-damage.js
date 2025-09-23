@@ -1,8 +1,10 @@
-// token-damage.js
+// token-damage.js v1.1.0
 // Foundry VTT V12/V13. Requires libWrapper. D&D5e system.
 // Shows damage near tokens with Bar 2 visibility and configurable offsets/font size.
 
 const MODULE_ID = "token-damage";
+
+const DEBUG = true;
 
 // Enable modes
 const EnableMode = {
@@ -63,19 +65,38 @@ Hooks.once("init", () => {
   // libWrapper wrappers
   if (globalThis.libWrapper) {
     tryWrap("Token.prototype.drawBars");
+//    tryWrap("Token.prototype._drawBar");
   } else {
     console.warn(`${MODULE_ID}: libWrapper not found. Falling back to Hooks only.`);
   }
 });
 
 Hooks.once("ready", () => {
-  Hooks.on("updateActor", (_a, _data) => refreshAllTokens());
-  Hooks.on("updateToken", (_doc, _data) => refreshAllTokens());
-  Hooks.on("controlToken", () => refreshAllTokens());
-  Hooks.on("hoverToken", () => refreshAllTokens());
+  // When an Actor changes, only update tokens of that actor
+  Hooks.on("updateActor", (actor, _data) => {
+    refreshTokensByActor(actor?.id);
+  });
+
+  // When a TokenDocument changes, update just that token (if on this canvas)
+  Hooks.on("updateToken", (doc, _data) => {
+    refreshTokenByDoc(doc);
+  });
+
+  // Control / hover should only affect that token
+  Hooks.on("controlToken", (token) => {
+    refreshToken(token);
+  });
+  Hooks.on("hoverToken", (token) => {
+    refreshToken(token);
+  });
+
+  // Canvas lifecycle + token creation/deletion
   Hooks.on("canvasReady", () => refreshAllTokens());
-  Hooks.on("createToken", () => refreshAllTokens());
-  Hooks.on("deleteToken", () => refreshAllTokens());
+  Hooks.on("createToken", (doc) => refreshTokenByDoc(doc));
+  Hooks.on("deleteToken", (doc) => {
+    const t = doc?.object;
+    if (t) cleanupLabel(t);
+  });
 });
 
 function tryWrap(targetPath) {
@@ -90,12 +111,37 @@ function tryWrap(targetPath) {
   }
 }
 
+
+/* ---------- Refresh helpers ---------- */
+
 function refreshAllTokens() {
-  console.log(`${MODULE_ID}: refreshing all tokens`);
   if (!canvas?.ready) return;
+  if (DEBUG) console.log(`${MODULE_ID}: refreshAllTokens`);
   for (const t of canvas.tokens.placeables) {
     try { updateDamageLabel(t); } catch (e) { console.error(`${MODULE_ID} refresh error`, e); }
   }
+}
+
+function refreshTokensByActor(actorId) {
+  if (!canvas?.ready || !actorId) return;
+  if (DEBUG) console.log(`${MODULE_ID}: refreshTokensByActor ${actorId}`);
+  for (const t of canvas.tokens.placeables) {
+    if (t?.document?.actorId === actorId) {
+      try { updateDamageLabel(t); } catch (e) { console.error(`${MODULE_ID} refresh error`, e); }
+    }
+  }
+}
+
+function refreshTokenByDoc(doc) {
+  if (!doc) return;
+  const t = doc.object; // rendered Token (if on this scene & visible)
+  if (t) refreshToken(t);
+}
+
+function refreshToken(token) {
+  if (!token) return;
+  if (!canvas?.ready) return;
+  try { updateDamageLabel(token); } catch (e) { console.error(`${MODULE_ID} refresh error`, e); }
 }
 
 function shouldDisplayForToken(token) {
