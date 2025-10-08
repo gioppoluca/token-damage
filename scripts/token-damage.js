@@ -14,6 +14,13 @@ const EnableMode = {
   ALL: "all"
 };
 
+let _enableMode, _offsetX, _offsetY, _fontPct;
+
+const ENABLE_MODE = () => _enableMode;
+const OFFSET_X = () => _offsetX | 0;
+const OFFSET_Y = () => _offsetY | 0;
+const FONT_PCT = () => Math.max(8, _fontPct | 0);
+
 Hooks.once("init", () => {
   // Settings
   game.settings.register(MODULE_ID, "enableMode", {
@@ -64,42 +71,72 @@ Hooks.once("init", () => {
 
   // libWrapper wrappers
   if (globalThis.libWrapper) {
-    tryWrap("Token.prototype.drawBars");
-//    tryWrap("Token.prototype._drawBar");
+    //tryWrap("Token.prototype.drawBars");
+    //    tryWrap("Token.prototype._drawBar");
   } else {
     console.warn(`${MODULE_ID}: libWrapper not found. Falling back to Hooks only.`);
   }
 });
 
+
 Hooks.once("ready", () => {
   // When an Actor changes, only update tokens of that actor
   Hooks.on("updateActor", (actor, _data) => {
+    console.log("token-damage: actor update", actor);
     refreshTokensByActor(actor?.id);
   });
 
   // When a TokenDocument changes, update just that token (if on this canvas)
-  Hooks.on("updateToken", (doc, _data) => {
+  Hooks.on("updateToken", (doc, changes) => {
+    console.log("token-damage: token update", doc, changes);
+    // Skip if no relevant changes
+    const relevant =
+      changes?.width !== undefined ||
+      changes?.height !== undefined ||
+      changes?.hidden !== undefined ||
+      changes?.disposition !== undefined;
+
+    if (!relevant) {
+      console.log("token-damage: skipping irrelevant token update");
+      return
+    };
     refreshTokenByDoc(doc);
   });
 
-  // Control / hover should only affect that token
+  // At the moment I do not care to manage control/hover state changes
+  /*
   Hooks.on("controlToken", (token) => {
     refreshToken(token);
   });
   Hooks.on("hoverToken", (token) => {
     refreshToken(token);
   });
+*/
 
   // Canvas lifecycle + token creation/deletion
-  Hooks.on("canvasReady", () => refreshAllTokens());
   Hooks.on("createToken", (doc) => refreshTokenByDoc(doc));
   Hooks.on("deleteToken", (doc) => {
     const t = doc?.object;
     if (t) cleanupLabel(t);
   });
+
+
+
+
 });
 
+Hooks.on("canvasReady", () => {
+  console.log(`${MODULE_ID}: canvasReady`);
+  _enableMode = game.settings.get(MODULE_ID, "enableMode");
+  _offsetX = Number(game.settings.get(MODULE_ID, "offsetX")) || 0;
+  _offsetY = Number(game.settings.get(MODULE_ID, "offsetY")) || 0;
+  _fontPct = Math.max(8, Number(game.settings.get(MODULE_ID, "fontPct")) || 25);
+  refreshAllTokens()
+});
+
+
 function tryWrap(targetPath) {
+  console.log(`${MODULE_ID}: trying to wrap ${targetPath}`);
   try {
     libWrapper.register(MODULE_ID, targetPath, function (wrapped, ...args) {
       try { updateDamageLabel(this); } catch (e) { console.error(`${MODULE_ID} label update error`, e); }
@@ -115,6 +152,7 @@ function tryWrap(targetPath) {
 /* ---------- Refresh helpers ---------- */
 
 function refreshAllTokens() {
+  console.log(`${MODULE_ID}: refreshAllTokens`);
   if (!canvas?.ready) return;
   if (DEBUG) console.log(`${MODULE_ID}: refreshAllTokens`);
   for (const t of canvas.tokens.placeables) {
@@ -123,6 +161,7 @@ function refreshAllTokens() {
 }
 
 function refreshTokensByActor(actorId) {
+  console.log(`${MODULE_ID}: refreshTokensByActor ${actorId}`);
   if (!canvas?.ready || !actorId) return;
   if (DEBUG) console.log(`${MODULE_ID}: refreshTokensByActor ${actorId}`);
   for (const t of canvas.tokens.placeables) {
@@ -133,36 +172,36 @@ function refreshTokensByActor(actorId) {
 }
 
 function refreshTokenByDoc(doc) {
+  console.log(`${MODULE_ID}: refreshTokenByDoc ${doc?.id}`);
   if (!doc) return;
   const t = doc.object; // rendered Token (if on this scene & visible)
   if (t) refreshToken(t);
 }
 
 function refreshToken(token) {
+  console.log(`${MODULE_ID}: refreshToken ${token?.id}`);
   if (!token) return;
   if (!canvas?.ready) return;
   try { updateDamageLabel(token); } catch (e) { console.error(`${MODULE_ID} refresh error`, e); }
 }
 
 function shouldDisplayForToken(token) {
-  console.log(`${MODULE_ID}: checking token ${token.id}`);
-  const mode = game.settings.get(MODULE_ID, "enableMode");
-  console.log(`${MODULE_ID}: enable mode is ${mode}`);
-  if (mode === EnableMode.OFF) return false;
+  //console.log(`${MODULE_ID}: shouldDisplayForToken - checking token ${token.id} ${token.name}`,token);
+  if (_enableMode === EnableMode.OFF) return false;
 
   const disp = token.document.disposition; // -1 hostile, 0 neutral, 1 friendly
   const isHostile = disp === -1;
   const isNeutral = disp === 0;
   const isFriendly = disp === 1;
 
-  if (mode === EnableMode.HOSTILE && !isHostile) return false;
-  if (mode === EnableMode.NON_ALLIES && isFriendly) return false;
-  console.log(`${MODULE_ID}: token disposition is ${disp}`);
+  if (_enableMode === EnableMode.HOSTILE && !isHostile) return false;
+  if (_enableMode === EnableMode.NON_ALLIES && isFriendly) return false;
+  //console.log(`${MODULE_ID}: token disposition is ${disp}`);
   const damage = getDamageValue(token);
-  console.log(`${MODULE_ID}: token damage is ${damage}`);
+  //console.log(`${MODULE_ID}: token damage is ${damage}`);
   if (damage <= 0) return false;
-
-  return token.visible && token.renderable;
+  //console.log("token-damage: token visible", token.visible, token.renderable, token.document.hidden);
+  return token.visible && token.renderable && !token.document.hidden;
 }
 
 function getDamageValue(token) {
@@ -186,9 +225,8 @@ function getDamageValue(token) {
 function ensureLabel(token) {
   if (token._tokenDamageLabel && !token._tokenDamageLabel.destroyed) return token._tokenDamageLabel;
 
-  const pct = Math.max(8, Number(game.settings.get(MODULE_ID, "fontPct")) || 25);
   const base = Math.min(token.w, token.h);
-  const px = Math.max(10, Math.round(base * (pct / 100)));
+  const px = Math.max(10, Math.round(base * (_fontPct / 100)));
 
   const style = new PIXI.TextStyle({
     fontFamily: "Signika, sans-serif",
@@ -233,11 +271,8 @@ function updateDamageLabel(token) {
   console.log(`${MODULE_ID}: damage value is ${dmg} for token ${token.id}`, lbl);
   lbl.text = `-${dmg}`;
 
-  const xOff = Number(game.settings.get(MODULE_ID, "offsetX")) || 0;
-  const yOff = Number(game.settings.get(MODULE_ID, "offsetY")) || 0;
-
   // Place bottom-right of label slightly outside top-right corner
-  lbl.x = token.w - xOff;
-  lbl.y = -yOff;
+  lbl.x = token.w - _offsetX;
+  lbl.y = -_offsetY;
   lbl.visible = true;
 }
